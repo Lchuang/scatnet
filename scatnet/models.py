@@ -12,11 +12,11 @@ from tensorflow.contrib.distributions import MultivariateNormalFullCovariance
 MVNFC = MultivariateNormalFullCovariance
 
 
-def gmm(mu, cov, tau, sx_proj, n_clusters=None, gmm_type='natural',
-        trainable=True, cov_diag=None):
+def gmm(mu, cov, tau, sx_proj, n_clusters, gmm_type='natural',
+        trainable=None, cov_diag=None):
     """Gaussian mixture clustering."""
     if trainable is True:
-        log_tau = tf.log(tf.nn.softmax(tau))
+        log_tau = tf.math.log(tf.nn.softmax(tau))
         eps = tf.eye(2)
         d = cov_diag
         gm = [MVNFC(mu[c], tf.nn.elu(d[c]) * np.eye(2) +
@@ -24,7 +24,7 @@ def gmm(mu, cov, tau, sx_proj, n_clusters=None, gmm_type='natural',
               for c in range(n_clusters)]
     else:
         n_clusters = cov.get_shape().as_list()[0]
-        log_tau = tf.log(tau)
+        log_tau = tf.math.log(tau)
         gm = [MVNFC(mu[c], cov[c]) for c in range(n_clusters)]
     log_p = [gm[c].log_prob(sx_proj) for c in range(n_clusters)]
     cat = tf.stack([log_tau[c] + log_p[c] for c in range(n_clusters)], 1)
